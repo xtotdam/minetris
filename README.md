@@ -7,7 +7,9 @@ A minesweeper with a pattern feature
 
 * `d16` -- touch D-16
 * `d16f` -- set/remove flag on D-16
-* `d16, e16, f16` -- touch D-16, E-16 and F-16 _(WIP)_
+* `d16, e16, f16` -- touch D-16, E-16 and F-16
+
+We don't care about spaces. `d16f = d 16 f = d16 f`.
 
 ### Dependencies
 
@@ -15,7 +17,8 @@ A minesweeper with a pattern feature
 
 ### TODO
 
-* stats output
-* current pattern output
-* batch revealing
-* move `sys.setrecursionlimit()` into class ??
+* [ ] stats output
+* [ ] current pattern output
+* [x] batch revealing
+* [ ] move `sys.setrecursionlimit()` into class ??
+* [ ] get rid of starting screen

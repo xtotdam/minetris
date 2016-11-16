@@ -10,6 +10,7 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 
 clear_color = '\033[0m'
 bold = '\033[01m'
+one_back = '\033[1D'
 
 name = '\033[36;01mMinetris' + clear_color
 
@@ -46,7 +47,7 @@ class Minesweepa():
 	game_started = False
 	i, j = 1000, 1000
 	mines_flagged = 0
-	pattern = np.zeros((2 * offset + 1, 2 * offset + 1), dtype=np.int)	# initial pattern -- zeros
+	pattern = np.zeros((2 * offset + 1, 2 * offset + 1), dtype=np.int)	# initial pattern -- zeros. Gets initialized in __init__()
 
 	def __init__(self, height=7, width=7, num_mines=5):
 		self.height = height if height < 25 else 25		# size of field
@@ -63,6 +64,8 @@ class Minesweepa():
 		self.opened = 	np.zeros((self.height, self.width), dtype=bool)		# array which contains opened cells
 
 		self.rf = [[empty for i in xrange(self.width)] for j in xrange(self.height)]	# 'rendered field', contains all cells in printable state
+
+		self.choose_pattern()
 
 
 	def __str__(self):
@@ -203,12 +206,11 @@ class Minesweepa():
 
 	def gameover(self):
 		'''Ends game'''
-		print	# compensate input line
 		if self.game_started:
 			self.show_all_clues()
 			self.reveal_mines()
 			self.output()
-		print 'Game over! Bye'
+		print 'Game over!'
 		exit()
 
 
@@ -222,7 +224,7 @@ class Minesweepa():
 
 	def output(self):
 		'''Shows game field'''
-		output = bold + '[ ' + '][ '.join(letters[:self.width]) + ']' + clear_color + '\n'
+		output = bold + one_back + '[ ' + '][ '.join(letters[:self.width]) + ']' + clear_color + '\n'
 		for (i,v) in enumerate(self.rf):
 			for el in v:
 				output += el
@@ -234,28 +236,32 @@ class Minesweepa():
 	def choose_pattern(self):
 		'''Chooses current pattern for calculating clues'''
 		p = choice(patterns)
-		# print p
 		self.pattern = p
 
 
 def decode_input(s):
 	'''Decodes user input'''
 	s = s.strip().replace(' ', '')
-	f = False
-	if s.endswith('f'):
-		f = True
-		s = s[:-1]
+	parts = s.split(',')
+	ijfs = []
+	for part in parts:
+		f = False
+		if part.endswith('f'):
+			f = True
+			part = part[:-1]
 
-	i, j = '', ''
-	for c in s:
-		if c in letters:
-			j += c
-		else:
-			i += c
+		i, j = '', ''
+		for c in part:
+			if c in letters:
+				j += c
+			else:
+				i += c
 
-	j = letters.index(j)
-	i = int(i)
-	return i, j, f
+		j = letters.index(j)
+		i = int(i)
+		ijfs.append((i, j, f))
+	return ijfs
+
 
 if __name__ == '__main__':
 	m = Minesweepa(height, width, num_mines=2)
@@ -263,16 +269,17 @@ if __name__ == '__main__':
 
 	while True:
 		try:
-			i, j, f = decode_input(raw_input('> \033[K'))
+			ijfs = decode_input(raw_input('> \033[K'))	# '\033[K' erases line after himself
 		except KeyboardInterrupt:
 			m.gameover()
 		except ValueError:
 			continue
 
-		m.choose_pattern()
-		m.get_input(i, j, f)
-		m.generate_field()
-		m.generate_clues()
-		m.touch_field()
+		for ijf in ijfs:
+			m.get_input(*ijf)
+			m.generate_field()
+			m.generate_clues()
+			m.touch_field()
 		m.update_rendered_field()
 		m.output()
+		m.choose_pattern()

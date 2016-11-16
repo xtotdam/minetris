@@ -21,4 +21,4 @@ We don't care about spaces. `d16f = d 16 f = d16 f`.
 * [ ] current pattern output
 * [x] batch revealing
 * [ ] move `sys.setrecursionlimit()` into class ??
-* [ ] get rid of starting screen
+* [x] get rid of starting screen

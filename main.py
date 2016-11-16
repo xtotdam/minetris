@@ -8,9 +8,10 @@ sys.setrecursionlimit(5000)
 
 letters = 'abcdefghijklmnopqrstuvwxyz'
 
-clear_color = '\033[0m'
-bold = '\033[01m'
-one_back = '\033[1D'
+clear_color = 	'\033[0m'
+bold = 			'\033[01m'
+one_back = 		'\033[1D'
+one_up = 		'\033[1A'
 
 name = '\033[36;01mMinetris' + clear_color
 
@@ -30,6 +31,7 @@ colors = [31, 32, 33, 34, 35, 36]
 def pbc(i, N):
 	'''Periodic boundary condition'''
 	return (i % N + N) % N
+
 
 def color(n):
 	'''Returns color in cycle based on `colors`'''
@@ -83,6 +85,7 @@ class Minesweepa():
 				self.field = self.field.reshape((self.height, self.width))
 				if not self.field[self.i][self.j]:
 					break
+				self.field = self.field.flatten()
 			self.game_started = True
 
 
@@ -99,8 +102,8 @@ class Minesweepa():
 
 
 	def get_input(self, i, j, f):
-		self.i = i
-		self.j = j
+		self.i = pbc(i, self.height)
+		self.j = pbc(j, self.width)
 		self.f = f
 
 
@@ -185,14 +188,6 @@ class Minesweepa():
 					self.rf[i][j] = color(c) + ' {:2d} '.format(c) + clear_color
 
 
-	def starting_screen(self):
-		'''Prints starting screen'''
-		mid = self.height / 2
-		left = self.height - mid
-		s = ' ' * (self.width * 2 - 7) + 'Strange Minesweepa'
-		return '\n' * mid + s + '\n' * left
-
-
 	def reveal_mines(self):
 		'''Puts all mines into `rf`'''
 		for i in xrange(self.height):
@@ -242,7 +237,7 @@ class Minesweepa():
 def decode_input(s):
 	'''Decodes user input'''
 	s = s.strip().replace(' ', '')
-	parts = s.split(',')
+	parts = filter(bool, s.split(','))
 	ijfs = []
 	for part in parts:
 		f = False
@@ -264,15 +259,18 @@ def decode_input(s):
 
 
 if __name__ == '__main__':
-	m = Minesweepa(height, width, num_mines=2)
-	print m.starting_screen()
+	m = Minesweepa(height, width, num_mines)
+	print '\n' * (height + 2),	# compensate output's compensation
+	m.output()
 
 	while True:
 		try:
 			ijfs = decode_input(raw_input('> \033[K'))	# '\033[K' erases line after himself
 		except KeyboardInterrupt:
+			print
 			m.gameover()
 		except ValueError:
+			print one_up + one_back,
 			continue
 
 		for ijf in ijfs:

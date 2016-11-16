@@ -22,3 +22,5 @@ We don't care about spaces. `d16f = d 16 f = d16 f`.
 * [x] batch revealing
 * [ ] move `sys.setrecursionlimit()` into class ??
 * [x] get rid of starting screen
+* [ ] on game over show flags and erroneous flags
+* [ ] random pattern generating?

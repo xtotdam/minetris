@@ -26,6 +26,9 @@ flag = 		'\033[37;07m[ F]' 		+ clear_color
 explosion = '\033[37;41;01m[XX]' 	+ clear_color
 mine = 		'\033[37;41;07m[XX]' 	+ clear_color
 
+p_true  = '[::]'
+p_false = '  . '
+
 colors = [31, 32, 33, 34, 35, 36]
 
 def pbc(i, N):
@@ -49,7 +52,9 @@ class Minesweepa():
 	game_started = False
 	i, j = 1000, 1000
 	mines_flagged = 0
-	pattern = np.zeros((2 * offset + 1, 2 * offset + 1), dtype=np.int)	# initial pattern -- zeros. Gets initialized in __init__()
+
+	cells_opened = 0
+	last_cells_opened = 0
 
 	def __init__(self, height=7, width=7, num_mines=5):
 		self.height = height if height < 25 else 25		# size of field
@@ -67,6 +72,8 @@ class Minesweepa():
 
 		self.rf = [[empty for i in xrange(self.width)] for j in xrange(self.height)]	# 'rendered field', contains all cells in printable state
 
+		self.pattern = np.zeros((2 * offset + 1, 2 * offset + 1), dtype=np.int)		# initial pattern
+		self.pr = [[empty for i in xrange(self.width)] for j in xrange(self.height)]	# `pattern rendered`, contains pattern in printable state
 		self.choose_pattern()
 
 
@@ -160,6 +167,11 @@ class Minesweepa():
 			self.mark_opened(i, j + 1)
 			self.mark_opened(i, j - 1)
 
+			self.mark_opened(i + 1, j + 1)
+			self.mark_opened(i - 1, j + 1)
+			self.mark_opened(i + 1, j - 1)
+			self.mark_opened(i - 1, j - 1)
+
 
 	def update_rendered_field(self):
 		'''Updates `rf` array, that will be shown to user'''
@@ -219,12 +231,22 @@ class Minesweepa():
 
 	def output(self):
 		'''Shows game field'''
-		output = bold + one_back + '[ ' + '][ '.join(letters[:self.width]) + ']' + clear_color + '\n'
+		off = 5
+		self.render_pattern()
+		header = self.pr[:]
+		header[1] += ' ' * off + name
+		header[3] += ' ' * off + 'Mines: ' + str(self.num_mines)
+		header[4] += ' ' * off + 'Flags: ' + str(np.sum(self.flagged)) + ' / ' + str(self.num_mines)
+		header[5] += ' ' * off + 'Cells opened: ' + str(np.sum(self.opened)) + ' / ' + str(self.width * self.height - self.num_mines)
+
+		header = '\n'.join(header) + '\n' * 2
+
+		output = one_back + header + bold + '[ ' + '][ '.join(letters[:self.width]) + ']' + clear_color + '\n'
 		for (i,v) in enumerate(self.rf):
 			for el in v:
 				output += el
 			output += bold + '[{:2d}]'.format(i) + clear_color + '\n'
-		print '\033[' + str(self.height + 2) + 'A',		# moves cursor up
+		print '\033[' + str(self.height + 2 + 8) + 'A',		# moves cursor up
 		print output[:-1]	# strip trailing '\n'
 
 
@@ -232,6 +254,23 @@ class Minesweepa():
 		'''Chooses current pattern for calculating clues'''
 		p = choice(patterns)
 		self.pattern = p
+
+	def render_pattern(self):
+		self.pr = []
+		for (i, e) in enumerate(self.pattern):
+			s = ''
+			for (j, v) in enumerate(e):
+				if i == offset and j == offset:
+					s += '\033[031m'
+
+				if v:
+					s += p_true
+				else:
+					s += p_false
+
+				if i == offset and j == offset:
+					s += clear_color
+			self.pr.append(s)
 
 
 def decode_input(s):
@@ -260,7 +299,7 @@ def decode_input(s):
 
 if __name__ == '__main__':
 	m = Minesweepa(height, width, num_mines)
-	print '\n' * (height + 2),	# compensate output's compensation
+	print '\n' * (height + 2 + 8),	# compensate output's compensation
 	m.output()
 
 	while True:
@@ -270,6 +309,9 @@ if __name__ == '__main__':
 			print
 			m.gameover()
 		except ValueError:
+			print one_up + one_back,
+			continue
+		if not len(ijfs):
 			print one_up + one_back,
 			continue
 

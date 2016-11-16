@@ -27,9 +27,11 @@ mine = 		'\033[37;41;07m[XX]' 	+ clear_color
 colors = [31, 32, 33, 34, 35, 36]
 
 def pbc(i, N):
+	'''Periodic boundary condition'''
 	return (i % N + N) % N
 
 def color(n):
+	'''Returns color in cycle based on `colors`'''
 	if not n:
 		return ''
 	template = '\033[{0};01m'
@@ -38,37 +40,40 @@ def color(n):
 
 
 class Minesweepa():
-	first_touch = True
-	game_over = False
+	'''Minesweeper'''
+
 	game_won = False
 	game_started = False
 	i, j = 1000, 1000
 	mines_flagged = 0
-	pattern = np.zeros((2 * offset + 1, 2 * offset + 1), dtype=np.int)
+	pattern = np.zeros((2 * offset + 1, 2 * offset + 1), dtype=np.int)	# initial pattern -- zeros
 
-	def __init__(self, height=5, width=5, num_mines=5):
-		self.height = height if height < 25 else 25
-		self.width = width if width < 25 else 25
-		self.num_mines = num_mines
+	def __init__(self, height=7, width=7, num_mines=5):
+		self.height = height if height < 25 else 25		# size of field
+		self.width  = width  if width  < 25 else 25
+		self.num_mines = num_mines						# number of mines
 
-		self.field = [1] * self.num_mines + [0] * (self.height * self.width - self.num_mines)
+		self.field = [1] * self.num_mines + [0] * (self.height * self.width - self.num_mines)	# game field
 		self.field = np.array(self.field, dtype=np.int8)
 
-		self.field2 = np.zeros((self.height + 2 * offset, self.width + 2 * offset), dtype=np.int8)
+		self.field2 = np.zeros((self.height + 2 * offset, self.width + 2 * offset), dtype=np.int8)	# is used to calculate clues on it
 
-		self.clues = 	np.zeros((self.height, self.width), dtype=np.int8)
-		self.flagged = 	np.zeros((self.height, self.width), dtype=np.int8)
-		self.opened = 	np.zeros((self.height, self.width), dtype=bool)
+		self.clues = 	np.zeros((self.height, self.width), dtype=np.int8)	# array with clues
+		self.flagged = 	np.zeros((self.height, self.width), dtype=np.int8)	# array with flags
+		self.opened = 	np.zeros((self.height, self.width), dtype=bool)		# array which contains opened cells
 
-		self.rf = [[empty for i in xrange(self.width)] for j in xrange(self.height)]
+		self.rf = [[empty for i in xrange(self.width)] for j in xrange(self.height)]	# 'rendered field', contains all cells in printable state
 
 
 	def __str__(self):
-		return 'Use .output()'
+		return 'Use .output() instead of __str___()'
 
 
 	def generate_field(self):
-		'''i, j -- coords of first stroke => no mines there'''
+		'''Shuffles initial state of field,
+		makes sure there is no mine on stroke coords.
+		Runs only once
+		'''
 		if not self.game_started:
 			while True:
 				np.random.shuffle(self.field)
@@ -79,6 +84,7 @@ class Minesweepa():
 
 
 	def generate_clues(self):
+		'''Fills `clues` array with numbers of mines nearby'''
 		self.field2[offset : self.height + offset, offset : self.width + offset] = self.field
 
 		for i in range(self.height):
@@ -96,12 +102,9 @@ class Minesweepa():
 
 
 	def touch_field(self):
+		'''Checks/sets flags, starts marking opened process, ends game'''
 		if self.i < 0 or self.i >= height or self.j < 0 or self.j >= width:
 			return
-
-		if not self.game_started:
-			self.generate_field(self.i, self.j)
-			self.game_started = True
 
 		if not self.opened[self.i][self.j]:
 			if self.f:
@@ -125,6 +128,7 @@ class Minesweepa():
 
 
 	def check_all_flags(self):
+		'''Checks if all flags point to mines, if yes, then sets flag `gamewon`'''
 		checked_mines = 0
 		for i in range(self.height):
 			for j in range(self.width):
@@ -135,6 +139,7 @@ class Minesweepa():
 
 
 	def mark_opened(self, i, j):
+		'''Marks field cells as once opened. Recursive!'''
 		if i < 0 or i >= self.height or j < 0 or j >= self.width:
 			return
 
@@ -151,6 +156,7 @@ class Minesweepa():
 
 
 	def update_rendered_field(self):
+		'''Updates `rf` array, that will be shown to user'''
 		for i in range(self.height):
 			for j in range(self.width):
 				if self.flagged[i][j]:
@@ -166,6 +172,7 @@ class Minesweepa():
 
 
 	def show_all_clues(self):
+		'''Updates `rf` to show all clues'''
 		for i in xrange(self.height):
 			for j in xrange(self.width):
 				c = self.clues[i][j]
@@ -176,6 +183,7 @@ class Minesweepa():
 
 
 	def starting_screen(self):
+		'''Prints starting screen'''
 		mid = self.height / 2
 		left = self.height - mid
 		s = ' ' * (self.width * 2 - 7) + 'Strange Minesweepa'
@@ -183,6 +191,7 @@ class Minesweepa():
 
 
 	def reveal_mines(self):
+		'''Puts all mines into `rf`'''
 		for i in xrange(self.height):
 			for j in xrange(self.width):
 				if self.field[i][j]:
@@ -193,6 +202,7 @@ class Minesweepa():
 
 
 	def gameover(self):
+		'''Ends game'''
 		print	# compensate input line
 		if self.game_started:
 			self.show_all_clues()
@@ -203,7 +213,7 @@ class Minesweepa():
 
 
 	def gamewon(self):
-		print
+		'''Ends game in winning manner'''
 		self.update_rendered_field()
 		self.output()
 		print 'You have won!'
@@ -211,22 +221,25 @@ class Minesweepa():
 
 
 	def output(self):
+		'''Shows game field'''
 		output = bold + '[ ' + '][ '.join(letters[:self.width]) + ']' + clear_color + '\n'
 		for (i,v) in enumerate(self.rf):
 			for el in v:
 				output += el
 			output += bold + '[{:2d}]'.format(i) + clear_color + '\n'
-		# print '\033[' + str(self.height + 2) + 'A',		# moves cursor up
+		print '\033[' + str(self.height + 2) + 'A',		# moves cursor up
 		print output[:-1]	# strip trailing '\n'
 
 
 	def choose_pattern(self):
+		'''Chooses current pattern for calculating clues'''
 		p = choice(patterns)
-		print p
+		# print p
 		self.pattern = p
 
 
 def decode_input(s):
+	'''Decodes user input'''
 	s = s.strip().replace(' ', '')
 	f = False
 	if s.endswith('f'):
@@ -245,7 +258,6 @@ def decode_input(s):
 	return i, j, f
 
 if __name__ == '__main__':
-	print offset
 	m = Minesweepa(height, width, num_mines=2)
 	print m.starting_screen()
 

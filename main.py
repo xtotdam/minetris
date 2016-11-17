@@ -2,7 +2,7 @@ import numpy as np
 import sys
 from random import choice
 
-from patterns_lists import squares as patterns, offset
+from patterns_lists import weirds as patterns, offset
 
 sys.setrecursionlimit(5000)
 

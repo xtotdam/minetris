@@ -2,7 +2,7 @@ import numpy as np
 import sys
 from random import choice
 
-from patterns_lists import weirds as patterns, offset
+from patterns_lists import squares as patterns, offset
 
 sys.setrecursionlimit(5000)
 
@@ -15,7 +15,7 @@ one_up = 		'\033[1A'
 
 name = '\033[36;01mMinetris' + clear_color
 
-width = 20
+width = 18
 height = 25
 num_mines = 30
 
@@ -50,9 +50,10 @@ class Minesweepa():
 
 	game_won = False
 	game_started = False
+	exploded = False
+
 	i, j = 1000, 1000
 	mines_flagged = 0
-
 	cells_opened = 0
 	last_cells_opened = 0
 
@@ -130,6 +131,7 @@ class Minesweepa():
 			else:
 				if not self.flagged[self.i][self.j]:
 					if self.field[self.i][self.j]:
+						self.exploded = True
 						self.gameover()
 					else:
 						self.mark_opened(self.i, self.j)
@@ -208,7 +210,10 @@ class Minesweepa():
 			for j in xrange(self.width):
 				if self.field[i][j]:
 					if i == self.i and j == self.j:
-						self.rf[i][j] = explosion
+						if self.exploded:
+							self.rf[i][j] = explosion
+						else:
+							self.rf[i][j] = mine
 					else:
 						self.rf[i][j] = mine
 

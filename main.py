@@ -2,7 +2,7 @@ import numpy as np
 import sys
 from random import choice
 
-from patterns_lists import extended as patterns, offset
+from patterns_lists import squares as patterns, offset
 
 sys.setrecursionlimit(5000)
 
@@ -167,6 +167,7 @@ class Minesweepa():
 			self.mark_opened(i, j + 1)
 			self.mark_opened(i, j - 1)
 
+			# diagonal revealing
 			# we should be cautious with these as they can reveal mines on poor pattern choice
 			self.mark_opened(i + 1, j + 1)
 			self.mark_opened(i - 1, j + 1)
